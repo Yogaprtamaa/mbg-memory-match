@@ -35,11 +35,11 @@ Phase 5 (Polish)         Efek tambahan, bisa dikerjakan kapan saja setelah Phase
 > *Prioritas TERTINGGI. Kerjakan pertama.*
 
 **Config (Fitur 4)**
-- [ ] `constants.py` — warna RGB, ukuran window (1000×700), ukuran kartu, margin, FPS, enum value kartu
-- [ ] `settings.py` — dict difficulty: Easy 4×3/120s, Medium 4×4/90s, Hard 6×4/60s (grid, pairs, traps, time)
+- [x] `constants.py` — warna RGB, ukuran window (1000×700), ukuran kartu, margin, FPS, enum value kartu
+- [x] `settings.py` — dict difficulty: Easy 4×3/120s, Medium 4×4/90s, Hard 6×4/60s (grid, pairs, traps, time)
 
 **Base Class (Fitur 2)**
-- [x] `GameObject(ABC)` — posisi/ukuran, `get_rect()`, abstract `draw`/`update` *(file ada, perlu isi)*
+- [x] `GameObject(ABC)` — posisi/ukuran, `get_rect()`, abstract `draw`/`update`
 - [x] `Card(ABC)` — state flip, animasi, `on_flip()` abstract *(sudah implementasi)*
 - [x] `Scene(ABC)` — abstract `handle_event`/`update`/`draw` *(sudah implementasi)*
 
@@ -55,23 +55,23 @@ Phase 5 (Polish)         Efek tambahan, bisa dikerjakan kapan saja setelah Phase
 > *Inti gameplay. Kerjakan setelah Phase 1 selesai.*
 
 **Kartu Turunan (Fitur 2)**
-- [ ] `MatchCard` — `on_flip()` cek pasangan, simpan poin bila cocok
-- [ ] `TrapCard(ABC)` — base trap, abstract `on_flip()`
-- [ ] `KoruptorCard` — `on_flip()` trigger instant GAME OVER
-- [ ] `TercemarCard` — `on_flip()` penalty (−15 detik & −10 skor)
+- [x] `MatchCard` — `on_flip()` return None, pasangan dicek oleh GameScene
+- [x] `TrapCard(ABC)` — base trap, abstract `on_flip()`
+- [x] `KoruptorCard` — `on_flip()` return "GAME_OVER"
+- [x] `TercemarCard` — `on_flip()` return "PENALTY"
 
 **Board (Fitur 2)**
-- [ ] `Board` — generate grid acak per difficulty, sisip 1 koruptor + 1 tercemar
-- [ ] Layout kartu otomatis menyesuaikan ukuran grid
+- [x] `Board` — generate grid acak per difficulty, sisip 1 koruptor + 1 tercemar
+- [x] Layout kartu otomatis menyesuaikan ukuran grid
 
 **Upgrade Score & Timer (Fitur 3)**
-- [x] `ScoreManager` — basic sudah ada *(perlu tambahan penalty & clamp)*
-- [x] `Timer` — basic sudah ada *(perlu ubah ke countdown)*
-- [ ] Penalty skor: flip salah −2, trap tercemar −10
-- [ ] Skor di-clamp minimal 0 (tidak boleh negatif)
-- [ ] Timer countdown sesuai difficulty (bukan count-up)
-- [ ] Timer `subtract()` untuk penalty −15 detik
-- [ ] Bonus menang: `sisa_detik × 2`
+- [x] `ScoreManager` — `add_score()`, `penalty()` dengan clamp ke 0
+- [x] `Timer` — countdown dengan `start()`, `tick()`, `subtract()`, `is_expired()`
+- [x] Penalty skor: flip salah −2, trap tercemar −10
+- [x] Skor di-clamp minimal 0 (tidak boleh negatif)
+- [x] Timer countdown sesuai difficulty (bukan count-up)
+- [x] Timer `subtract()` untuk penalty −15 detik
+- [x] Bonus menang: `sisa_detik × 2`
 
 ---
 
@@ -80,18 +80,18 @@ Phase 5 (Polish)         Efek tambahan, bisa dikerjakan kapan saja setelah Phase
 > *Bangun layar-layar navigasi. Butuh Phase 2.*
 
 **Scene Manager (Fitur 1)**
-- [ ] `SceneManager` — set/switch scene aktif, delegasi event/update/draw
-- [ ] `Button` — tombol UI klik-able dengan callback
+- [x] `SceneManager` — set/switch scene aktif, delegasi event/update/draw
+- [x] `Button` — tombol UI klik-able dengan callback
 
 **Menu (Fitur 1)**
-- [ ] `MenuScene` — judul MBG, tombol Play, Quit
-- [ ] UI pilih level (Easy / Medium / Hard)
+- [x] `MenuScene` — judul MBG, tombol Play, Quit
+- [x] UI pilih level (Easy / Medium / Hard)
 
 **Gameplay Scene (Fitur 2)**
-- [ ] `GameScene` — komposisi Board + ScoreManager + Timer
-- [ ] Logika flip 2 kartu: cocok → tetap terbuka, tidak cocok → balik lagi
-- [ ] Render skor + timer + moves di layar
-- [ ] Deteksi menang: semua `MatchCard` matched
+- [x] `GameScene` — komposisi Board + ScoreManager + Timer
+- [x] Logika flip 2 kartu: cocok → tetap terbuka, tidak cocok → balik lagi
+- [x] Render skor + timer + moves di layar
+- [x] Deteksi menang: semua `MatchCard` matched
 
 **Game Over (Fitur 5)**
 - [ ] `GameOverScene` — turunan `Scene`
@@ -106,10 +106,10 @@ Phase 5 (Polish)         Efek tambahan, bisa dikerjakan kapan saja setelah Phase
 
 > *Menyatukan semuanya. Game bisa jalan end-to-end.*
 
-- [ ] Rewrite `main.py` — init pygame + SceneManager + game loop (event → update → draw)
-- [ ] Navigasi: Menu → Play → Game → Win/Lose → Game Over → Restart/Menu
-- [ ] Trigger game over: buka `KoruptorCard` / timer habis
-- [ ] Trigger menang: semua `MatchCard` matched → bonus skor → GameOverScene
+- [x] Rewrite `main.py` — init pygame + SceneManager + game loop (event → update → draw)
+- [x] Navigasi: Menu → Play → Game → Win/Lose → kembali ke Menu *(sementara, nanti ke GameOverScene)*
+- [x] Trigger game over: buka `KoruptorCard` / timer habis
+- [x] Trigger menang: semua `MatchCard` matched → bonus skor
 
 ---
 

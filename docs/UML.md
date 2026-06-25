@@ -102,11 +102,11 @@ classDiagram
     }
     class Board {
         -_cards: list~Card~
-        -rows: int
-        -cols: int
-        +generate(level)
+        -_rows: int
+        -_cols: int
         +get_card_at(pos) Card
         +all_matched() bool
+        +update()
         +draw(screen)
     }
     class ScoreManager {
@@ -115,14 +115,21 @@ classDiagram
         +score: int «property»
         +moves: int «property»
         +add_score(points)
+        +penalty(points)
         +add_move()
         +reset()
     }
     class Timer {
-        +start_time: int
-        +reset()
-        +get_time() int
+        -_total: int
+        -_remaining: float
+        -_last_tick: int
+        +remaining: float «property»
+        +start()
+        +tick()
+        +subtract(seconds)
+        +is_expired() bool
         +get_formatted_time() str
+        +reset(total_seconds)
     }
     class SceneManager {
         -_current: Scene
@@ -280,10 +287,12 @@ stateDiagram-v2
 
 ## 4. Catatan Implementasi
 
-- `on_flip()` tanpa parameter — logika efek (skor, timer, game over) ditangani oleh `GameScene` setelah memanggil `on_flip()`, bukan dari dalam kartu.
-- `Card` menyimpan state animasi (`is_animating`, `flip_angle`, `flip_speed`) dan memainkan sound flip secara internal.
-- `Timer` saat ini count-up (`get_time()` hitung selisih dari `start_time`). Perlu diextend ke countdown saat implementasi `GameScene`.
-- `Board.generate(level)` membaca konfigurasi difficulty (§4 PRD): jumlah baris/kolom, jumlah pasangan, dan selalu menyisipkan 1 `KoruptorCard` + 1 `TercemarCard`, lalu mengacak posisi.
+- `on_flip()` tanpa parameter — mengembalikan sinyal: `None` (MatchCard), `"GAME_OVER"` (KoruptorCard), `"PENALTY"` (TercemarCard). `GameScene` bertindak berdasarkan return value.
+- `Card` menyimpan state animasi (`is_animating`, `flip_angle`, `flip_speed`) dan memainkan sound flip secara internal. Juga menyimpan `value` (identitas pasangan) dan `is_matched`.
+- `Timer` menggunakan countdown: `start()` mulai, `tick()` kurangi `_remaining` per frame, `subtract(s)` untuk penalty, `is_expired()` cek habis.
+- `ScoreManager.penalty(points)` mengurangi skor dengan clamp ke 0 (skor tidak boleh negatif).
+- `Board` membaca konfigurasi difficulty saat konstruksi: membuat pasangan `MatchCard`, menyisipkan 1 `KoruptorCard` + 1 `TercemarCard`, mengacak posisi, dan menghitung layout grid otomatis.
+- `GameScene` menggunakan state machine (IDLE → FIRST_ANIMATING → WAITING_SECOND → SECOND_ANIMATING → SHOWING_RESULT) untuk mengelola alur flip dan evaluasi.
 - Klik diabaikan bila kartu sudah `matched`, sudah `flipped`, atau saat animasi berjalan (`is_animating`).
 
 ---

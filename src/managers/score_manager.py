@@ -13,6 +13,13 @@ class ScoreManager:
 
     def add_score(self, points):
         self._score += points
+        if self._score < 0:
+            self._score = 0
+
+    def penalty(self, points):
+        self._score -= points
+        if self._score < 0:
+            self._score = 0
 
     def add_move(self):
         self._moves += 1
