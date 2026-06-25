@@ -1,4 +1,5 @@
 import random
+import re
 import os
 from src.cards.match_card import MatchCard
 from src.cards.koruptor_card import KoruptorCard
@@ -9,6 +10,10 @@ from src.config.constants import (
     MATCH_VALUES, CARD_FRONT_COLORS,
 )
 from src.config.settings import DIFFICULTY, IMAGE_PATH
+
+IMAGE_NAME_MAP = {
+    "TRUK_MBG": "TRUCK_MBG",
+}
 
 
 class Board:
@@ -42,15 +47,17 @@ class Board:
             value, color, card_type = card_data[idx]
 
             if card_type == "koruptor":
-                front_path = os.path.join(IMAGE_PATH, "traps", "koruptor.png")
+                front_path = os.path.join(IMAGE_PATH, "traps", "OKNUM_KORUPTOR.png")
                 card = KoruptorCard(x, y, CARD_WIDTH, CARD_HEIGHT,
                                     front_path, back_path)
             elif card_type == "tercemar":
-                front_path = os.path.join(IMAGE_PATH, "traps", "makanan_tercemar.png")
+                front_path = os.path.join(IMAGE_PATH, "cards", "MAKANAN_TERCEMAR.png")
                 card = TercemarCard(x, y, CARD_WIDTH, CARD_HEIGHT,
                                     front_path, back_path)
             else:
-                front_path = os.path.join(IMAGE_PATH, "cards", f"{value}.png")
+                base_name = re.sub(r'_\d+$', '', value)
+                image_name = IMAGE_NAME_MAP.get(base_name, base_name)
+                front_path = os.path.join(IMAGE_PATH, "cards", f"{image_name}.png")
                 card = MatchCard(x, y, CARD_WIDTH, CARD_HEIGHT, value,
                                  front_path, back_path, color)
 

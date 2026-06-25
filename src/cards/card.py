@@ -30,7 +30,7 @@ class Card(GameObject, ABC):
         self.flip_speed = 10
 
         try:
-            self.sound_flip = pygame.mixer.Sound("assets/sounds/flip.wav")
+            self.sound_flip = pygame.mixer.Sound("assets/sounds/flip.mp3")
         except (pygame.error, FileNotFoundError):
             self.sound_flip = None
 
