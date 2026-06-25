@@ -26,15 +26,19 @@ classDiagram
 
     class Card {
         <<abstract>>
-        #_value: str
-        #_is_flipped: bool
-        #_is_matched: bool
+        +rect: Rect
+        +original_width: int
+        +front_image: Surface
+        +back_image: Surface
         +is_flipped: bool
-        +is_matched: bool
-        +value: str
+        +is_animating: bool
+        +flip_angle: int
+        +flip_speed: int
+        +sound_flip: Sound
         +flip()
-        +on_flip(game)*
-        +draw(screen)
+        +update()
+        +draw(surface)
+        +on_flip()*
     }
 
     class Scene {
@@ -46,18 +50,18 @@ classDiagram
 
     class TrapCard {
         <<abstract>>
-        +on_flip(game)*
+        +on_flip()*
     }
 
     %% ---------- Card subclasses ----------
     class MatchCard {
-        +on_flip(game)  : cek pasangan
+        +on_flip()  : cek pasangan
     }
     class KoruptorCard {
-        +on_flip(game)  : GAME OVER
+        +on_flip()  : GAME OVER
     }
     class TercemarCard {
-        +on_flip(game)  : -15s, -10 skor
+        +on_flip()  : -15s, -10 skor
     }
 
     %% ---------- Scene subclasses ----------
@@ -108,22 +112,17 @@ classDiagram
     class ScoreManager {
         -_score: int
         -_moves: int
-        +score: int
-        +moves: int
-        +add(points)
-        +penalty(points)
+        +score: int «property»
+        +moves: int «property»
+        +add_score(points)
         +add_move()
         +reset()
     }
     class Timer {
-        -_total: int
-        -_remaining: float
-        +remaining: float
-        +start(seconds)
-        +tick(dt)
-        +subtract(seconds)
-        +is_expired() bool
-        +format() str
+        +start_time: int
+        +reset()
+        +get_time() int
+        +get_formatted_time() str
     }
     class SceneManager {
         -_current: Scene
@@ -160,9 +159,9 @@ classDiagram
 |---|---|
 | **Abstraction** | `GameObject`, `Card`, `Scene`, `TrapCard` = `<<abstract>>` dengan abstractmethod (`draw`, `update`, `on_flip`, ...) |
 | **Inheritance** | `Card → MatchCard/TrapCard`, `TrapCard → Koruptor/Tercemar`, `Scene → Menu/Game/GameOver` |
-| **Polymorphism** | `on_flip(game)` beda perilaku: `MatchCard` (cek pasangan) vs `KoruptorCard` (game over) vs `TercemarCard` (penalty) |
-| **Encapsulation** | `_is_flipped`, `_is_matched`, `_score`, `_moves`, `_remaining` private + akses lewat property |
-| **Composition** | `Board *-- Card`, `GameScene *-- Board/ScoreManager/Timer` (has-a) |
+| **Polymorphism** | `on_flip()` beda perilaku: `MatchCard` (cek pasangan) vs `KoruptorCard` (game over) vs `TercemarCard` (penalty) |
+| **Encapsulation** | `_score`, `_moves` private + akses lewat `@property` read-only di `ScoreManager` |
+| **Composition** | `Board o-- Card`, `GameScene *-- Board/ScoreManager/Timer` (has-a) |
 
 ---
 
@@ -186,28 +185,25 @@ sequenceDiagram
 
     alt belum ada pilihan pertama
         GS->>C1: flip()
-        GS->>C1: on_flip(game)
+        GS->>C1: on_flip()
         Note over GS: simpan sebagai first_pick
     else sudah ada pilihan pertama
         GS->>C2: flip()
-        GS->>C2: on_flip(game)
+        GS->>C2: on_flip()
         GS->>SM: add_move()
 
         alt C2 adalah TRAP
             alt KoruptorCard
                 C2-->>GS: game_over("trap")
             else TercemarCard
-                C2->>T: subtract(15)
-                C2->>SM: penalty(10)
-                Note over GS: tutup kartu, lanjut main
+                Note over GS: kurangi waktu & skor, tutup kartu, lanjut main
             end
         else dua MatchCard
             alt value cocok
-                GS->>SM: add(10)
+                GS->>SM: add_score(10)
                 Note over C1,C2: is_matched = True
                 GS->>GS: check_win()
             else tidak cocok
-                GS->>SM: penalty(2)
                 Note over C1,C2: flip kembali (tertutup)
             end
         end
@@ -284,10 +280,11 @@ stateDiagram-v2
 
 ## 4. Catatan Implementasi
 
-- `on_flip(game)` menerima referensi `GameScene` agar kartu bisa memengaruhi `ScoreManager`/`Timer`/state (cara polymorphism memberi efek berbeda).
+- `on_flip()` tanpa parameter — logika efek (skor, timer, game over) ditangani oleh `GameScene` setelah memanggil `on_flip()`, bukan dari dalam kartu.
+- `Card` menyimpan state animasi (`is_animating`, `flip_angle`, `flip_speed`) dan memainkan sound flip secara internal.
+- `Timer` saat ini count-up (`get_time()` hitung selisih dari `start_time`). Perlu diextend ke countdown saat implementasi `GameScene`.
 - `Board.generate(level)` membaca konfigurasi difficulty (§4 PRD): jumlah baris/kolom, jumlah pasangan, dan selalu menyisipkan 1 `KoruptorCard` + 1 `TercemarCard`, lalu mengacak posisi.
-- `Timer.tick(dt)` dipanggil tiap frame dengan delta-time agar countdown independen dari FPS.
-- Klik diabaikan bila kartu sudah `matched`, sudah `flipped`, atau saat 2 kartu sedang dievaluasi.
+- Klik diabaikan bila kartu sudah `matched`, sudah `flipped`, atau saat animasi berjalan (`is_animating`).
 
 ---
 

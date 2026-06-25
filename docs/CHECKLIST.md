@@ -136,7 +136,4 @@ Phase 5 (Polish)         Efek tambahan, bisa dikerjakan kapan saja setelah Phase
 - [ ] Tambah gambar match hingga ≥11 unik (untuk Hard 11 pasang)
 - [ ] Sound files lengkap: match.wav, win.wav, game_over.wav, trap.wav
 - [ ] 1 font UI
-
----
-
-*Terakhir diperbarui: 2026-06-25*
+ **update**
