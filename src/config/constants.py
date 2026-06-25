@@ -1,0 +1,32 @@
+import pygame
+
+# Window Configurations
+WINDOW_WIDTH = 1000
+WINDOW_HEIGHT = 700
+FPS = 60
+
+# Colors
+COLOR_BG = (240, 248, 255)       # Alice Blue
+COLOR_PRIMARY = (30, 144, 255)   # Dodger Blue
+COLOR_SECONDARY = (70, 130, 180) # Steel Blue
+COLOR_TEXT = (44, 62, 80)
+COLOR_CARD_BACK = (52, 152, 219)
+COLOR_WHITE = (255, 255, 255)
+
+# Card Value Identifiers (Enum-like)
+CARD_VALUES = [
+    "PAKET_MAKANAN_1", "PAKET_MAKANAN_2", 
+    "TRUK_MBG_1", "TRUK_MBG_2",
+    "ANAK_SEKOLAH_1", "ANAK_SEKOLAH_2",
+    "PAK_PEMIMPIN_1", "PAK_PEMIMPIN_2",
+    "PETUGAS_GIZI_1", "PETUGAS_GIZI_2",
+    "VARIAN_EXTRA_1"
+]
+
+TRAP_KORUPTOR = "OKNUM_KORUPTOR"
+TRAP_TERCEMAR = "MAKANAN_TERCEMAR"
+
+# Difficulty Enums
+LEVEL_EASY = "EASY"
+LEVEL_MEDIUM = "MEDIUM"
+LEVEL_HARD = "HARD"
