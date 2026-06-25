@@ -11,6 +11,14 @@ class Timer:
     def remaining(self):
         return self._remaining
 
+    @property
+    def total(self):
+        return self._total
+
+    @property
+    def elapsed(self):
+        return max(0, int(self._total - self._remaining))
+
     def start(self):
         self._last_tick = pygame.time.get_ticks()
 
@@ -27,11 +35,13 @@ class Timer:
     def is_expired(self):
         return self._remaining <= 0
 
+    @staticmethod
+    def format_seconds(seconds):
+        total = int(seconds)
+        return f"{total // 60:02}:{total % 60:02}"
+
     def get_formatted_time(self):
-        total = int(self._remaining)
-        minutes = total // 60
-        seconds = total % 60
-        return f"{minutes:02}:{seconds:02}"
+        return self.format_seconds(self._remaining)
 
     def reset(self, total_seconds=None):
         if total_seconds is not None:

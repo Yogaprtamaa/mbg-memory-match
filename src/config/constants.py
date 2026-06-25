@@ -30,20 +30,27 @@ PETUGAS_GIZI = "PETUGAS_GIZI"
 OKNUM_KORUPTOR = "OKNUM_KORUPTOR"
 MAKANAN_TERCEMAR = "MAKANAN_TERCEMAR"
 
-# 11 unique match values (enough for Hard mode)
+# 11 unique match values (enough for Hard mode).
+# Urutan penting: 5 nilai pertama = 5 kategori BERBEDA agar Easy (5 pasang)
+# selalu punya 5 gambar distinct. Varian _2/_3 dibedakan lewat badge angka.
 MATCH_VALUES = [
     "PAKET_MAKANAN_1",
-    "PAKET_MAKANAN_2",
-    "PAKET_MAKANAN_3",
     "TRUK_MBG_1",
-    "TRUK_MBG_2",
     "ANAK_SEKOLAH_1",
-    "ANAK_SEKOLAH_2",
     "PAK_PEMIMPIN_1",
-    "PAK_PEMIMPIN_2",
     "PETUGAS_GIZI_1",
+    "PAKET_MAKANAN_2",
+    "TRUK_MBG_2",
+    "ANAK_SEKOLAH_2",
+    "PAK_PEMIMPIN_2",
     "PETUGAS_GIZI_2",
+    "PAKET_MAKANAN_3",
 ]
+
+# Badge varian (pojok kartu) — biar varian sekategori beda secara visual
+BADGE_BG_COLOR = (33, 33, 33)
+BADGE_TEXT_COLOR = (255, 255, 255)
+BADGE_RADIUS = 15
 
 # Fallback colors per index (for cards without image assets)
 CARD_FRONT_COLORS = [
@@ -73,7 +80,7 @@ CARD_HEIGHT = 140
 CARD_MARGIN = 15
 
 # HUD
-HUD_HEIGHT = 60
+HUD_HEIGHT = 84
 
 # Scoring
 SCORE_MATCH = 10

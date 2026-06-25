@@ -1,4 +1,5 @@
 from src.cards.trap_card import TrapCard
+from src.cards.flip_result import FlipResult
 from src.config.constants import MAKANAN_TERCEMAR, TRAP_COLORS
 
 
@@ -11,4 +12,4 @@ class TercemarCard(TrapCard):
                          TRAP_COLORS[MAKANAN_TERCEMAR])
 
     def on_flip(self):
-        return "PENALTY"
+        return FlipResult.PENALTY

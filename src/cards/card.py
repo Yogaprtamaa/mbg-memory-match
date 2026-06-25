@@ -1,103 +1,155 @@
-import pygame
 import math
-import os
+import re
 from abc import ABC, abstractmethod
+
+import pygame
+
 from src.objects.game_object import GameObject
-from src.config.constants import CARD_BACK_COLOR, WHITE
+from src.utils.asset_loader import get_asset_loader
+from src.utils import ui
+from src.config import theme
+from src.config.settings import SOUND_PATH
+
+FLIP_SOUND = SOUND_PATH + "flip.mp3"
+CARD_RADIUS = 14
+PAD = 9
+SPINE_H = 14
 
 
 class Card(GameObject, ABC):
+    """Kartu 'ubin nampan': bingkai putih, foto membulat, spine kategori,
+    punggung kupon bersegel emas.
+
+    State (flip/matched/animasi/hover) private; hanya diubah lewat method
+    dan diakses via property read-only — bukti Encapsulation.
+    """
 
     def __init__(self, x, y, width, height, value,
                  front_image_path=None, back_image_path=None,
                  front_color=(76, 175, 80)):
         super().__init__(x, y, width, height)
-        self.value = value
-        self.is_matched = False
-        self.rect = pygame.Rect(x, y, width, height)
-        self.original_width = width
+        self._value = value
+        self._rect = pygame.Rect(x, y, width, height)
+        self._face_size = (width, height)
+        self._spine = theme.category_color(value)
 
-        self.front_image = self._load_image(
-            front_image_path, width, height, front_color, value
+        loader = get_asset_loader()
+        match = re.search(r"_(\d+)$", str(value)) if value else None
+        badge = match.group(1) if match else None
+        raw_front = loader.load_image(
+            front_image_path, (width, height), front_color, value or "", badge
         )
-        self.back_image = self._load_image(
-            back_image_path, width, height, CARD_BACK_COLOR, "?"
-        )
+        self._front_face = self._build_front_face(raw_front)
+        self._back_face = self._build_back_face()
+        self._sound_flip = loader.load_sound(FLIP_SOUND)
 
-        self.is_flipped = False
-        self.is_animating = False
-        self.flip_angle = 0
-        self.flip_speed = 10
+        self._is_flipped = False
+        self._is_matched = False
+        self._is_animating = False
+        self._hover = False
+        self._flip_angle = 0
+        self._flip_speed = 10
 
-        try:
-            self.sound_flip = pygame.mixer.Sound("assets/sounds/flip.mp3")
-        except (pygame.error, FileNotFoundError):
-            self.sound_flip = None
+    # ---------- Komposisi tampilan ----------
+    def _build_front_face(self, raw_front):
+        w, h = self._face_size
+        face = pygame.Surface((w, h), pygame.SRCALPHA)
+        ui.round_rect(face, (0, 0, w, h), theme.TRAY, CARD_RADIUS)
 
-    @staticmethod
-    def _load_image(path, width, height, fallback_color, label):
-        if path and os.path.exists(path):
-            img = pygame.image.load(path)
-            return pygame.transform.scale(img, (width, height))
+        img_w = w - PAD * 2
+        img_h = h - PAD * 2 - SPINE_H - 4
+        photo = ui.round_image(pygame.transform.smoothscale(raw_front, (img_w, img_h)), 8)
+        face.blit(photo, (PAD, PAD))
 
-        surface = pygame.Surface((width, height))
-        surface.fill(fallback_color)
-        pygame.draw.rect(surface, WHITE, surface.get_rect(), 3, border_radius=6)
+        spine = pygame.Rect(PAD, h - PAD - SPINE_H, w - PAD * 2, SPINE_H)
+        ui.round_rect(face, spine, self._spine, 7)
+        ui.round_rect(face, (0, 0, w, h), theme.TRAY_LINE, CARD_RADIUS, width=2)
+        return face
 
-        display = label.replace("_", " ")
-        font = pygame.font.SysFont(None, 20)
-        words = display.split()
-        lines = []
-        current = ""
-        for w in words:
-            test = f"{current} {w}".strip()
-            if font.size(test)[0] <= width - 16:
-                current = test
-            else:
-                if current:
-                    lines.append(current)
-                current = w
-        if current:
-            lines.append(current)
+    def _build_back_face(self):
+        w, h = self._face_size
+        back = pygame.Surface((w, h), pygame.SRCALPHA)
+        ui.round_rect(back, (0, 0, w, h), theme.SPINACH, CARD_RADIUS)
+        ui.round_rect(back, (6, 6, w - 12, h - 12), (26, 40, 34), CARD_RADIUS - 3)
+        ui.round_rect(back, (6, 6, w - 12, h - 12), theme.GOLD_DEEP, CARD_RADIUS - 3, width=1)
 
-        total_h = len(lines) * 22
-        start_y = (height - total_h) // 2
-        for i, line in enumerate(lines):
-            text = font.render(line, True, WHITE)
-            rect = text.get_rect(center=(width // 2, start_y + i * 22 + 11))
-            surface.blit(text, rect)
-        return surface
+        seal = (w // 2, h // 2 - 6)
+        pygame.draw.circle(back, theme.GOLD, seal, 22)
+        pygame.draw.circle(back, theme.GOLD_DEEP, seal, 22, 3)
+        ui.text(back, "MBG", theme.font("display", 24, bold=True), theme.SPINACH, center=seal)
+        ui.text(back, "NAMPAN GIZI", theme.font("body", 13), theme.GOLD,
+                center=(w // 2, h // 2 + 28))
+        return back
 
+    # ---------- Property read-only ----------
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def rect(self):
+        return self._rect
+
+    @property
+    def is_flipped(self):
+        return self._is_flipped
+
+    @property
+    def is_matched(self):
+        return self._is_matched
+
+    @property
+    def is_animating(self):
+        return self._is_animating
+
+    # ---------- Perilaku ----------
     def flip(self):
-        if not self.is_animating:
-            self.is_animating = True
-            if self.sound_flip:
-                self.sound_flip.play()
+        if not self._is_animating:
+            self._is_animating = True
+            if self._sound_flip is not None:
+                self._sound_flip.play()
+
+    def mark_matched(self):
+        self._is_matched = True
+
+    def set_hover(self, value):
+        self._hover = bool(value)
 
     def update(self):
-        if self.is_animating:
-            self.flip_angle += self.flip_speed
-            if self.flip_angle >= 90 and self.flip_angle - self.flip_speed < 90:
-                self.is_flipped = not self.is_flipped
-            if self.flip_angle >= 180:
-                self.flip_angle = 0
-                self.is_animating = False
+        if not self._is_animating:
+            return
+        self._flip_angle += self._flip_speed
+        if self._flip_angle >= 90 and self._flip_angle - self._flip_speed < 90:
+            self._is_flipped = not self._is_flipped
+        if self._flip_angle >= 180:
+            self._flip_angle = 0
+            self._is_animating = False
 
     def draw(self, surface):
-        current_image = self.front_image if self.is_flipped else self.back_image
+        face = self._front_face if self._is_flipped else self._back_face
+        w, h = self._face_size
+        cx, cy = self._rect.center
+        lift = -6 if (self._hover and not self._is_matched and not self._is_animating) else 0
+        center = (cx, cy + lift)
 
-        if self.is_animating:
-            scale_factor = abs(math.cos(math.radians(self.flip_angle)))
-            animated_width = int(self.original_width * scale_factor)
-            if animated_width > 0:
-                scaled = pygame.transform.scale(
-                    current_image, (animated_width, self.rect.height)
-                )
-                new_rect = scaled.get_rect(center=self.rect.center)
-                surface.blit(scaled, new_rect.topleft)
+        if self._is_matched:
+            pulse = 0.5 + 0.5 * math.sin(pygame.time.get_ticks() * 0.005)
+            glow = pygame.Surface((w + 26, h + 26), pygame.SRCALPHA)
+            ui.round_rect(glow, glow.get_rect(), (*theme.LEAF, int(55 + 70 * pulse)), 20)
+            surface.blit(glow, glow.get_rect(center=center).topleft)
+
+        ui.blit_shadow(surface, center, self._face_size, CARD_RADIUS,
+                       alpha=95 if lift else 65, y_offset=8 - lift)
+
+        if self._is_animating:
+            scale_factor = abs(math.cos(math.radians(self._flip_angle)))
+            animated_width = max(1, int(w * scale_factor))
+            scaled = pygame.transform.scale(face, (animated_width, h))
+            surface.blit(scaled, scaled.get_rect(center=center).topleft)
         else:
-            surface.blit(current_image, self.rect.topleft)
+            surface.blit(face, face.get_rect(center=center).topleft)
 
     @abstractmethod
     def on_flip(self):
+        """Polymorphic: kembalikan FlipResult sesuai jenis kartu."""
         pass

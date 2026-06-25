@@ -1,4 +1,5 @@
 from src.cards.card import Card
+from src.cards.flip_result import FlipResult
 
 
 class MatchCard(Card):
@@ -10,4 +11,4 @@ class MatchCard(Card):
                          front_image_path, back_image_path, front_color)
 
     def on_flip(self):
-        return None
+        return FlipResult.NORMAL

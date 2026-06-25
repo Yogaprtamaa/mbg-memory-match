@@ -94,6 +94,12 @@ class Board:
         for card in self._cards:
             card.update()
 
+    def update_hover(self, pos, active):
+        for card in self._cards:
+            hot = (active and not card.is_matched and not card.is_flipped
+                   and not card.is_animating and card.rect.collidepoint(pos))
+            card.set_hover(hot)
+
     def draw(self, screen):
         for card in self._cards:
             card.draw(screen)

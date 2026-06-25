@@ -1,4 +1,5 @@
 from src.cards.trap_card import TrapCard
+from src.cards.flip_result import FlipResult
 from src.config.constants import OKNUM_KORUPTOR, TRAP_COLORS
 
 
@@ -11,4 +12,4 @@ class KoruptorCard(TrapCard):
                          TRAP_COLORS[OKNUM_KORUPTOR])
 
     def on_flip(self):
-        return "GAME_OVER"
+        return FlipResult.GAME_OVER
