@@ -48,39 +48,42 @@ MATCH_VALUES = [
 ]
 
 # Badge varian (pojok kartu) — biar varian sekategori beda secara visual
-BADGE_BG_COLOR = (33, 33, 33)
+BADGE_BG_COLOR = (110, 90, 107)     # INK plum (selaras token design.md)
 BADGE_TEXT_COLOR = (255, 255, 255)
 BADGE_RADIUS = 15
 
-# Fallback colors per index (for cards without image assets)
+# Fallback colors per index (kartu tanpa aset gambar) — palet pastel design.md
 CARD_FRONT_COLORS = [
-    (76, 175, 80),
-    (56, 142, 60),
-    (129, 199, 132),
-    (33, 150, 243),
-    (25, 118, 210),
-    (255, 193, 7),
-    (255, 152, 0),
-    (244, 67, 54),
-    (233, 30, 99),
-    (156, 39, 176),
-    (0, 188, 212),
+    (244, 169, 125),   # peach
+    (110, 143, 230),   # brand blue
+    (111, 191, 115),   # success green
+    (154, 111, 224),   # brand purple
+    (96, 196, 196),    # teal
+    (246, 196, 90),    # gold
+    (229, 101, 78),    # danger red
+    (197, 176, 232),   # lavender
+    (169, 162, 62),    # olive
+    (240, 150, 170),   # rose
+    (130, 170, 235),   # sky blue
 ]
 
 TRAP_COLORS = {
-    OKNUM_KORUPTOR: (183, 28, 28),
-    MAKANAN_TERCEMAR: (62, 39, 35),
+    OKNUM_KORUPTOR: (96, 84, 96),
+    MAKANAN_TERCEMAR: (169, 162, 62),
 }
 
-CARD_BACK_COLOR = (55, 71, 79)
+CARD_BACK_COLOR = (244, 169, 125)
 
-# Card dimensions
-CARD_WIDTH = 100
-CARD_HEIGHT = 140
-CARD_MARGIN = 15
+# Card dimensions (ukuran maksimum; Board menyesuaikan agar grid pas — design.md §2b)
+CARD_WIDTH = 118
+CARD_HEIGHT = 165
+CARD_MARGIN = 16          # GAP_CARD
 
-# HUD
-HUD_HEIGHT = 84
+# Layout — HUD jadi panel kaca kiri (design.md §2b), board mengisi area kanan
+WINDOW_MARGIN = 24
+HUD_PANEL_W = 220
+BOARD_TOP = 96
+HUD_HEIGHT = BOARD_TOP    # kompat: tinggi area atas yang dipakai header/pill
 
 # Scoring
 SCORE_MATCH = 10

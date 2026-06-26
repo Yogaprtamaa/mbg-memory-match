@@ -30,7 +30,7 @@ class SceneManager:
         if self._fade_alpha > 0:
             if self._overlay is None or self._overlay.get_size() != screen.get_size():
                 self._overlay = pygame.Surface(screen.get_size())
-                self._overlay.fill(theme.RICE_TOP)
+                self._overlay.fill(theme.BG_CREAM)
             self._overlay.set_alpha(self._fade_alpha)
             screen.blit(self._overlay, (0, 0))
             self._fade_alpha = max(0, self._fade_alpha - 22)

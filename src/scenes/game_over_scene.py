@@ -9,11 +9,21 @@ from src.config import theme
 from src.config.constants import WINDOW_WIDTH, WINDOW_HEIGHT
 
 WIN_RESULT = "MENANG"
-CONFETTI_COLORS = [theme.GOLD, theme.LEAF, theme.CARROT, theme.SKY, theme.TOMATO]
+KORUPTOR_RESULT = "Kena Koruptor!"
+
+CONFETTI_COLORS = [theme.SCORE_GOLD, theme.SUCCESS_GREEN, theme.CARD_PEACH,
+                   theme.BRAND_BLUE, theme.BRAND_PURPLE]
+
+# Aksen status mengikuti hasil (design.md §2c)
+RESULT_ACCENT = {
+    WIN_RESULT: theme.SUCCESS_GREEN,
+    KORUPTOR_RESULT: theme.DANGER_RED,
+    "Waktu Habis": theme.BRAND_PURPLE,
+}
 
 
 class GameOverScene(Scene):
-    """Layar akhir bergaya kartu nampan: status, statistik, navigasi."""
+    """Layar akhir: panel kaca center, status berwarna, statistik, navigasi."""
 
     def __init__(self, scene_manager, result, score, moves, time_used, level):
         self._scene_manager = scene_manager
@@ -23,31 +33,33 @@ class GameOverScene(Scene):
         self._time_used = time_used
         self._level = level
         self._is_win = result == WIN_RESULT
-        self._accent = theme.LEAF if self._is_win else theme.TOMATO
+        self._accent = RESULT_ACCENT.get(result, theme.BRAND_PURPLE)
 
-        self._panel = pygame.Rect(0, 0, 560, 470)
+        self._panel = pygame.Rect(0, 0, 520, 470)
         self._panel.center = (WINDOW_WIDTH // 2, 360)
 
-        bw = 200
-        by = self._panel.bottom - 78
+        bw, bh = 190, 52
+        by = self._panel.bottom - 84
         self._buttons = [
-            Button(WINDOW_WIDTH // 2 - bw - 12, by, bw, 54, "Main Lagi",
-                   self._on_restart, theme.LEAF, font_size=24),
-            Button(WINDOW_WIDTH // 2 + 12, by, bw, 54, "Menu",
-                   self._on_menu, theme.TRAY, hover_color=(244, 238, 224),
-                   text_color=theme.SPINACH, font_size=24, border_color=theme.TRAY_LINE),
+            Button(WINDOW_WIDTH // 2 - bw - 10, by, bw, bh, "Main Lagi",
+                   self._on_restart, gradient=(theme.SUCCESS_GREEN, (96, 176, 130)),
+                   font_size=22),
+            Button(WINDOW_WIDTH // 2 + 10, by, bw, bh, "Menu",
+                   self._on_menu, color=theme.SURFACE_WHITE,
+                   text_color=theme.INK, font_size=22, border_color=theme.HAIRLINE),
         ]
 
-        self._confetti = [self._spawn_confetti(initial=True) for _ in range(140)] if self._is_win else []
+        self._confetti = [self._spawn_confetti(initial=True)
+                          for _ in range(140)] if self._is_win else []
 
     # ---------- Aksi ----------
     def _on_restart(self):
-        pygame.mixer.stop()  # hentikan win.mp3/error.mp3 sebelum pindah
+        pygame.mixer.stop()
         from src.scenes.game_scene import GameScene
         self._scene_manager.set_scene(GameScene(self._scene_manager, self._level))
 
     def _on_menu(self):
-        pygame.mixer.stop()  # hentikan win.mp3/error.mp3 sebelum pindah
+        pygame.mixer.stop()
         from src.scenes.menu_scene import MenuScene
         self._scene_manager.set_scene(MenuScene(self._scene_manager))
 
@@ -83,11 +95,26 @@ class GameOverScene(Scene):
 
     # ---------- Render ----------
     def draw(self, screen):
-        screen.blit(ui.vertical_gradient(screen.get_size(), theme.RICE_TOP, theme.RICE_BOT), (0, 0))
+        screen.blit(ui.background(screen.get_size()), (0, 0))
+        if self._result == KORUPTOR_RESULT:
+            self._draw_vignette(screen)
         self._draw_confetti(screen)
         self._draw_panel(screen)
         for button in self._buttons:
             button.draw(screen)
+
+    def _draw_vignette(self, screen):
+        veil = pygame.Surface((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.SRCALPHA)
+        cx, cy = WINDOW_WIDTH // 2, WINDOW_HEIGHT // 2
+        max_r = (WINDOW_WIDTH ** 2 + WINDOW_HEIGHT ** 2) ** 0.5 / 2
+        for i in range(8, 0, -1):
+            t = i / 8
+            r = int(max_r * t)
+            a = int(90 * t)
+            pygame.draw.circle(veil, (*theme.DANGER_RED, a), (cx, cy), r)
+        # lubang terang di tengah
+        pygame.draw.circle(veil, (0, 0, 0, 0), (cx, cy), int(max_r * 0.25))
+        screen.blit(veil, (0, 0))
 
     def _draw_confetti(self, screen):
         for p in self._confetti:
@@ -99,22 +126,23 @@ class GameOverScene(Scene):
 
     def _draw_panel(self, screen):
         panel = self._panel
-        ui.blit_shadow(screen, panel.center, panel.size, 22, alpha=110, y_offset=14)
-        ui.round_rect(screen, panel, theme.TRAY, 22)
-        ui.round_rect(screen, (panel.x, panel.y, panel.width, 12), self._accent, 22)
-        ui.round_rect(screen, panel, theme.TRAY_LINE, 22, width=2)
+        ui.glass_panel(screen, panel, alpha=205)
 
         cx = panel.centerx
-        seal = (cx, panel.y + 70)
-        seal_color = theme.GOLD if self._is_win else (120, 120, 120)
+        seal = (cx, panel.y + 66)
+        seal_color = theme.SCORE_GOLD if self._is_win else self._accent
+        pygame.draw.circle(screen, ui.lerp_color(seal_color, (255, 255, 255), 0.5),
+                           (seal[0], seal[1] + 2), 32)
         pygame.draw.circle(screen, seal_color, seal, 30)
-        pygame.draw.circle(screen, ui.lerp_color(seal_color, (0, 0, 0), 0.2), seal, 30, 3)
-        ui.text(screen, "MBG", theme.font("display", 26, bold=True), theme.SPINACH, center=seal)
+        pygame.draw.circle(screen, ui.lerp_color(seal_color, (0, 0, 0), 0.15), seal, 30, 3)
+        ui.text(screen, "MBG", theme.font("display", 24, bold=True),
+                theme.SURFACE_WHITE, center=seal)
 
-        ui.text(screen, self._result, theme.font("display", 54, bold=True),
-                self._accent, center=(cx, panel.y + 132))
-        subtitle = "Gizi tersalurkan. Kerja bagus!" if self._is_win else "Belum berhasil — coba lagi."
-        ui.text(screen, subtitle, theme.font("body", 19), theme.SPINACH_SOFT,
+        ui.text(screen, self._result, theme.font("display", 48, bold=True),
+                self._accent, center=(cx, panel.y + 134))
+        subtitle = ("Gizi tersalurkan. Kerja bagus!" if self._is_win
+                    else "Belum berhasil — coba lagi.")
+        ui.text(screen, subtitle, theme.font("body", 18), theme.INK_MUTED,
                 center=(cx, panel.y + 168))
 
         rows = [
@@ -123,13 +151,13 @@ class GameOverScene(Scene):
             ("Langkah", str(self._moves)),
             ("Level", self._level.title()),
         ]
-        row_y = panel.y + 204
+        row_y = panel.y + 206
         for i, (label, value) in enumerate(rows):
-            y = row_y + i * 42
-            ui.text(screen, label, theme.font("body", 20), theme.SPINACH_SOFT,
-                    midleft=(panel.x + 48, y))
-            ui.text(screen, value, theme.font("mono", 22, bold=True), theme.SPINACH,
-                    midright=(panel.right - 48, y))
+            y = row_y + i * 40
+            ui.text(screen, label, theme.font("body", 19), theme.INK_MUTED,
+                    midleft=(panel.x + 44, y))
+            ui.text(screen, value, theme.font("data", 22, bold=True), theme.INK,
+                    midright=(panel.right - 44, y))
             if i < len(rows) - 1:
-                pygame.draw.line(screen, theme.TRAY_LINE,
-                                 (panel.x + 48, y + 21), (panel.right - 48, y + 21), 1)
+                pygame.draw.line(screen, theme.HAIRLINE,
+                                 (panel.x + 44, y + 20), (panel.right - 44, y + 20), 1)
